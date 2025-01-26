@@ -8,6 +8,9 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Castle, Sword, Scroll, Users, MessageCircle, Cog } from "lucide-react";
 
+// Set default header for all axios requests
+axios.defaults.headers.common["ngrok-skip-browser-warning"] = "true";
+
 // Animation variants
 const containerVariants = {
   initial: { opacity: 0, y: 20 },
