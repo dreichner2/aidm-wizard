@@ -79,10 +79,6 @@ export default function AIDMWizard() {
   const [sessionId, setSessionId] = useState(null);
   const [playerId, setPlayerId] = useState(null);
 
-  const handleGoto = (target) => {
-    setStep(target);
-  };
-
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center bg-fixed bg-cover bg-center p-10"
@@ -98,7 +94,7 @@ export default function AIDMWizard() {
         >
           <Card className="bg-transparent shadow-none">
             <CardHeader className="border-b border-yellow-700">
-              <WizardHeader step={step} />
+              <TabNavigation step={step} setStep={setStep} />
             </CardHeader>
             <CardContent className="p-4">
               {step === 1 && (
@@ -106,7 +102,7 @@ export default function AIDMWizard() {
                   <ServerPage
                     serverUrl={serverUrl}
                     setServerUrl={setServerUrl}
-                    onNext={() => handleGoto(2)}
+                    setStep={setStep}
                   />
                 </motion.div>
               )}
@@ -116,7 +112,7 @@ export default function AIDMWizard() {
                     serverUrl={serverUrl}
                     setCampaignId={setCampaignId}
                     setWorldId={setWorldId}
-                    onNext={() => handleGoto(3)}
+                    setStep={setStep}
                   />
                 </motion.div>
               )}
@@ -127,7 +123,7 @@ export default function AIDMWizard() {
                     campaignId={campaignId}
                     sessionId={sessionId}
                     setSessionId={setSessionId}
-                    onNext={() => handleGoto(4)}
+                    setStep={setStep}
                   />
                 </motion.div>
               )}
@@ -138,7 +134,7 @@ export default function AIDMWizard() {
                     campaignId={campaignId}
                     playerId={playerId}
                     setPlayerId={setPlayerId}
-                    onNext={() => handleGoto(5)}
+                    setStep={setStep}
                   />
                 </motion.div>
               )}
@@ -161,13 +157,13 @@ export default function AIDMWizard() {
   );
 }
 
-function WizardHeader({ step }) {
+function TabNavigation({ step, setStep }) {
   const steps = [
-    { title: 'Server', Icon: Castle },
-    { title: 'Campaign', Icon: Scroll },
-    { title: 'Session', Icon: Sword },
-    { title: 'Player', Icon: Users },
-    { title: 'Chat', Icon: MessageCircle },
+    { title: 'Server', Icon: Castle, index: 1 },
+    { title: 'Campaign', Icon: Scroll, index: 2 },
+    { title: 'Session', Icon: Sword, index: 3 },
+    { title: 'Player', Icon: Users, index: 4 },
+    { title: 'Chat', Icon: MessageCircle, index: 5 },
   ];
 
   return (
@@ -175,18 +171,19 @@ function WizardHeader({ step }) {
       className="w-full flex flex-wrap items-center justify-around p-2"
       variants={childVariants}
     >
-      {steps.map((obj, idx) => {
-        const current = idx + 1 === step;
+      {steps.map((obj) => {
+        const current = obj.index === step;
         const Icon = obj.Icon;
         return (
           <motion.div
             key={obj.title}
             variants={childVariants}
-            className={`flex items-center gap-1 text-sm md:text-base px-3 py-2 rounded-lg transition-all duration-300 cursor-default m-1 ${
+            className={`flex items-center gap-1 text-sm md:text-base px-3 py-2 rounded-lg transition-all duration-300 cursor-pointer m-1 ${
               current
                 ? 'bg-yellow-300 text-black font-bold scale-105 border border-yellow-600 shadow-sm'
                 : 'bg-transparent text-gray-300 hover:text-yellow-100'
             }`}
+            onClick={() => setStep(obj.index)}
           >
             <Icon className="h-5 w-5" />
             <span>
@@ -199,23 +196,24 @@ function WizardHeader({ step }) {
   );
 }
 
-function ServerPage({ serverUrl, setServerUrl, onNext }) {
+function ServerPage({ serverUrl, setServerUrl, setStep }) {
   const [localUrl, setLocalUrl] = useState(serverUrl);
 
-  const handleNextClick = () => {
+  const handleSetUrl = () => {
     if (!localUrl.trim()) {
       alert('Server URL cannot be empty.');
       return;
     }
     setServerUrl(localUrl);
-    onNext();
+    // Next step
+    setStep(2);
   };
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-4xl font-bold text-center mb-2 text-yellow-200 drop-shadow-lg">The Portal</h1>
       <p className="italic text-sm text-yellow-50">
-        Enter the URL of your AI-DM realm to open the portal...
+        Enter the URL of your AI-DM realm to open the portal (still no forced order, but you can press the tab above, too).
       </p>
       <label className="block mb-1 font-semibold">Portal Address:</label>
       <input
@@ -225,15 +223,14 @@ function ServerPage({ serverUrl, setServerUrl, onNext }) {
         onChange={(e) => setLocalUrl(e.target.value)}
       />
       <div className="flex justify-center mt-2">
-        <Button className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2" onClick={handleNextClick}>
-          Proceed
+        <Button className="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-2" onClick={handleSetUrl}>
+          Open Portal
         </Button>
       </div>
     </div>
   );
 }
 
-// A generic popover-based item selector with dissolving animation
 function FancySelector({ label, items, selectedValue, onSelect, onRefresh, newItemAction, newItemLabel, confirmLabel }) {
   // We track whether the popover is open ourselves
   const [open, setOpen] = useState(false);
@@ -335,10 +332,6 @@ function FancySelector({ label, items, selectedValue, onSelect, onRefresh, newIt
           <Button
             className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2"
             onClick={() => {
-              if (!selectedValue) {
-                alert('Please select an option first.');
-                return;
-              }
               confirmLabel();
             }}
           >
@@ -350,7 +343,7 @@ function FancySelector({ label, items, selectedValue, onSelect, onRefresh, newIt
   );
 }
 
-function CampaignPage({ serverUrl, setCampaignId, setWorldId, onNext }) {
+function CampaignPage({ serverUrl, setCampaignId, setWorldId, setStep }) {
   const [campaigns, setCampaigns] = useState([]);
   const [selectedCampaign, setSelectedCampaign] = useState("");
 
@@ -413,7 +406,7 @@ function CampaignPage({ serverUrl, setCampaignId, setWorldId, onNext }) {
 
   const handleConfirm = async () => {
     if (!selectedCampaign) {
-      alert('Select or create a campaign first.');
+      // No blocking if user doesn't pick campaign
       return;
     }
     const [cidStr] = selectedCampaign.split(':');
@@ -429,7 +422,8 @@ function CampaignPage({ serverUrl, setCampaignId, setWorldId, onNext }) {
     } catch {
       setWorldId(1);
     }
-    onNext();
+    // next step
+    setStep(3);
   };
 
   // transform campaigns to items for FancySelector
@@ -442,7 +436,7 @@ function CampaignPage({ serverUrl, setCampaignId, setWorldId, onNext }) {
     <div className="flex flex-col gap-4">
       <h1 className="text-4xl font-bold text-center mb-2 text-yellow-200 drop-shadow-lg">The Kingdom</h1>
       <p className="italic text-sm text-yellow-50">
-        Choose or create a campaign realm to begin your grand adventure...
+        Choose or create a campaign realm (no enforced order) but you can press Onward if you want.
       </p>
       <FancySelector
         label="Select or Create a Campaign:"
@@ -458,13 +452,13 @@ function CampaignPage({ serverUrl, setCampaignId, setWorldId, onNext }) {
   );
 }
 
-function SessionPage({ serverUrl, campaignId, sessionId, setSessionId, onNext }) {
+function SessionPage({ serverUrl, campaignId, sessionId, setSessionId, setStep }) {
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState("");
 
   const loadSessions = async () => {
     if (!campaignId) {
-      alert('No campaign selected.');
+      // if there's no campaign yet, skip loading
       return;
     }
     try {
@@ -485,6 +479,10 @@ function SessionPage({ serverUrl, campaignId, sessionId, setSessionId, onNext })
   }, [campaignId]);
 
   const createSession = async () => {
+    if (!campaignId) {
+      alert('Please select a campaign first.');
+      return;
+    }
     try {
       const resp = await axios.post(`${serverUrl.replace(/\/$/, '')}/api/sessions/start`, {
         campaign_id: campaignId,
@@ -502,7 +500,6 @@ function SessionPage({ serverUrl, campaignId, sessionId, setSessionId, onNext })
 
   const handleConfirm = () => {
     if (!selectedSession) {
-      alert('Select or create a session first.');
       return;
     }
     const [sidStr] = selectedSession.split(' ', 1);
@@ -511,7 +508,8 @@ function SessionPage({ serverUrl, campaignId, sessionId, setSessionId, onNext })
     }
     const sid = parseInt(sidStr);
     setSessionId(sid);
-    onNext();
+    // next step
+    setStep(4);
   };
 
   const sessionItems = sessions.map((s) => ({
@@ -523,7 +521,7 @@ function SessionPage({ serverUrl, campaignId, sessionId, setSessionId, onNext })
     <div className="flex flex-col gap-4">
       <h1 className="text-4xl font-bold text-center mb-2 text-yellow-200 drop-shadow-lg">The Summoning</h1>
       <p className="italic text-sm text-yellow-50">
-        Call forth a session to shape your party’s journey...
+        Call forth a session to shape your party’s journey. Press Onward or skip around.
       </p>
       <FancySelector
         label="Select or Create a Session:"
@@ -539,13 +537,13 @@ function SessionPage({ serverUrl, campaignId, sessionId, setSessionId, onNext })
   );
 }
 
-function PlayerPage({ serverUrl, campaignId, playerId, setPlayerId, onNext }) {
+function PlayerPage({ serverUrl, campaignId, playerId, setPlayerId, setStep }) {
   const [players, setPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState('');
 
   const loadPlayers = async () => {
     if (!campaignId) {
-      alert('No campaign selected.');
+      // if there's no campaign, skip
       return;
     }
     try {
@@ -566,6 +564,10 @@ function PlayerPage({ serverUrl, campaignId, playerId, setPlayerId, onNext }) {
   }, [campaignId]);
 
   const createPlayer = async () => {
+    if (!campaignId) {
+      alert('Please choose a campaign first.');
+      return;
+    }
     const userName = prompt('Enter user name:');
     if (!userName) return;
     const characterName = prompt('Enter character name:');
@@ -596,7 +598,6 @@ function PlayerPage({ serverUrl, campaignId, playerId, setPlayerId, onNext }) {
 
   const handleConfirm = () => {
     if (!selectedPlayer) {
-      alert('Select or create a player first.');
       return;
     }
     const [pidStr] = selectedPlayer.split(':', 1);
@@ -605,7 +606,8 @@ function PlayerPage({ serverUrl, campaignId, playerId, setPlayerId, onNext }) {
     }
     const pid = parseInt(pidStr);
     setPlayerId(pid);
-    onNext();
+    // next step
+    setStep(5);
   };
 
   const playerItems = players.map((p) => ({
@@ -617,7 +619,7 @@ function PlayerPage({ serverUrl, campaignId, playerId, setPlayerId, onNext }) {
     <div className="flex flex-col gap-4">
       <h1 className="text-4xl font-bold text-center mb-2 text-yellow-200 drop-shadow-lg">The Champion</h1>
       <p className="italic text-sm text-yellow-50">
-        Select or create your hero to join the quest...
+        Select or create your hero, then press Onward or hop around as you wish.
       </p>
       <FancySelector
         label="Choose or Create a Player:"
@@ -754,8 +756,10 @@ function ChatPage({ serverUrl, campaignId, worldId, sessionId, playerId }) {
 
     let charName = "Unknown Player";
     try {
-      const resp = await axios.get(`${serverUrl.replace(/\/$/, '')}/api/players/${playerId}`);
-      charName = resp.data?.character_name || 'Unknown Player';
+      if (playerId) {
+        const resp = await axios.get(`${serverUrl.replace(/\/$/, '')}/api/players/${playerId}`);
+        charName = resp.data?.character_name || 'Unknown Player';
+      }
     } catch (err) {
       // ignore
     }
@@ -808,7 +812,7 @@ function ChatPage({ serverUrl, campaignId, worldId, sessionId, playerId }) {
     <div className="flex flex-col gap-4 relative">
       <h1 className="text-4xl font-bold text-center mb-2 text-yellow-200 drop-shadow-lg">The Oracle</h1>
       <p className="italic text-sm text-yellow-50">
-        Converse with the Dungeon Master, or share your heroic deeds...
+        Converse with the Dungeon Master, or share your heroic deeds. This is the final step, but you can still jump around!
       </p>
 
       {/* Chat container */}
@@ -905,7 +909,7 @@ function ChatPage({ serverUrl, campaignId, worldId, sessionId, playerId }) {
                     }}
                     className="px-2 py-1 bg-yellow-600 hover:bg-yellow-700"
                   >
-                    &#8592;
+                    ←
                   </Button>
                   <span className="text-sm">{fontFamily.replace('font-', '')}</span>
                   <Button
@@ -916,7 +920,7 @@ function ChatPage({ serverUrl, campaignId, worldId, sessionId, playerId }) {
                     }}
                     className="px-2 py-1 bg-yellow-600 hover:bg-yellow-700"
                   >
-                    &#8594;
+                    →
                   </Button>
                 </div>
               </div>
