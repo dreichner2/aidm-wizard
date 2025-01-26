@@ -352,14 +352,29 @@ function CampaignPage({ serverUrl, setCampaignId, setWorldId, onNext }) {
   const [selectedCampaign, setSelectedCampaign] = useState("");
 
   const loadCampaigns = async () => {
+    if (!serverUrl) {
+      console.error('No server URL provided');
+      return;
+    }
+
+    const apiUrl = `${serverUrl.replace(/\/$/, '')}/api/campaigns`;
+    if (!apiUrl.startsWith('http')) {
+      console.error('Invalid server URL:', apiUrl);
+      return;
+    }
+
     try {
-      const resp = await axios.get(`${serverUrl.replace(/\/$/, '')}/api/campaigns`);
+      console.log('Fetching campaigns from:', apiUrl);
+      const resp = await axios.get(apiUrl);
+      console.log('Campaign response:', resp.data);
       if (Array.isArray(resp.data)) {
         setCampaigns(resp.data);
       } else {
+        console.warn('Received non-array response:', resp.data);
         setCampaigns([]);
       }
     } catch (error) {
+      console.error('Campaign loading error:', error);
       alert(`Failed to load campaigns:\n${error}`);
     }
   };
